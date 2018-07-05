@@ -51,3 +51,5 @@ function queryFinishedGoodInWarehouse() {
 
 <br><br>
 <div id="finishedGoodInWarehouseList"></div>
+
+<div class="ui-block-b"><a href="<?php echo base_url('finishedgoodinwarehouse/downExcelFinishedGoodInWarehouseView');?>" data-role="button" data-icon="flat-bubble" data-theme="c">Excel Download FGIW</a></div>

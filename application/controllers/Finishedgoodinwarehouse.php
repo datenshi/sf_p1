@@ -22,6 +22,11 @@ class Finishedgoodinwarehouse extends CI_Controller {
         $this->load->view('footer');
     }
 
+    public function downExcelFinishedGoodInWarehouseView()
+    {
+        
+    }
+
     public function queryFinishedGoodInWarehouse()
     {
         $this->load->model('finishedgoodinwarehousemodel');

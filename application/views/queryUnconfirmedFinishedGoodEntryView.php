@@ -277,3 +277,5 @@ function queryUnconfirmedFinishedGoodEntry(isFinishedGoodEntryID) {
 <br><br>
 <div id="queryFinishedGoodEntryList"></div>
 <div id="reviseFinishedGoodEntryArea"></div>
+
+<div class="ui-block-b"><a href="<?php echo base_url('finishedgoodentry/downExcelFinishedGoodEntry');?>" data-role="button" data-icon="flat-bubble" data-theme="c">Excel Download FGE</a></div>
