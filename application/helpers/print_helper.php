@@ -15,7 +15,7 @@ if ( ! function_exists('print_excel')) {
             ->fromArray(
                 $db_data_test,  // The data to set
                 NULL,           // Array values with this value will not be set
-                'F3'            // Top left coordinate of the worksheet range where
+                'C3'            // Top left coordinate of the worksheet range where
                                 // we want to set these values (default is A1)
         );
 

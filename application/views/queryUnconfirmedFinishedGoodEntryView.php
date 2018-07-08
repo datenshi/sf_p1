@@ -1,5 +1,8 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+$isConfirmed = 0;
+$finishedGoodEntryID = 0;
+$filterByDate = 'Date_to_by_filtered_by';
 ?>
 
 <script>
@@ -299,5 +302,5 @@ $('.down-excel').click( function(e) {
 <div id="queryFinishedGoodEntryList"></div>
 <div id="reviseFinishedGoodEntryArea"></div>
 
-<div class="ui-block-b"><a href="<?php echo base_url('finishedgoodentry/downExcelFinishedGoodEntry');?>" data-role="button" data-icon="flat-bubble" data-theme="c">Excel Download FGE</a></div>
+<div class="ui-block-b"><a href="<?php echo base_url('finishedgoodentry/downExcelFinishedGoodEntry/'.$isConfirmed.'/'.$finishedGoodEntryID.'/'.$filterByDate);?>" data-role="button" data-icon="flat-bubble" data-theme="c">Excel Download FGE</a></div>
 <div class="ui-block-b down-excel"><a href="" data-role="button" data-icon="flat-bubble" data-theme="c">Excel Download FGE2</a></div>

@@ -82,7 +82,7 @@ class Finishedgoodentry extends CI_Controller {
         $this->load->view('footer');
     }
 
-    public function downExcelFinishedGoodEntry($isConfirmed = 0, $finishedGoodEntryID = 0)
+    public function downExcelFinishedGoodEntry($isConfirmed = 0, $finishedGoodEntryID = 0, $filterByDate = 0)
     {
         $model = 'finishedgoodentrymodel';
         $query_function = 'queryFinishedGoodEntryData';
@@ -91,7 +91,7 @@ class Finishedgoodentry extends CI_Controller {
         $query = $this->finishedgoodentrymodel->$query_function($isConfirmed, $finishedGoodEntryID);
          
         $db_data_test = $query->result_array();
-        $header = ["成品入庫單編號", "倉儲流水號", "成品代號", "成品種類", "包裝", "單位重量", "每棧板的成品數量", "狀態", "儲放區域", "入庫日期", "棧板數", "入庫數量", "入庫重量", "待入庫棧板數", "待入庫數量"];
+        $header = ["成品入庫單編號", "倉儲流水號", "成品代號", "成品種類", "包裝", "單位重量", "每棧板的成品數量", "狀態", "儲放區域", "入庫日期", "棧板數", "入庫數量", "入庫重量", "待入庫棧板數", "待入庫數量", $filterByDate];
 
         $this->load->helper('print_helper');
         print_excel($db_data_test, $header);
