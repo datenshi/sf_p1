@@ -86,7 +86,6 @@ class Finishedgoodentry extends CI_Controller {
     {
         $model = 'finishedgoodentrymodel';
         $query_function = 'queryFinishedGoodEntryData';
-
         $this->load->model($model);
 
         $query = $this->finishedgoodentrymodel->$query_function($isConfirmed, $finishedGoodEntryID);

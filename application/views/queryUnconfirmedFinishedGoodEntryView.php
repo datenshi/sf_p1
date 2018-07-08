@@ -261,6 +261,27 @@ function queryUnconfirmedFinishedGoodEntry(isFinishedGoodEntryID) {
         }
     });
 }
+
+$('.down-excel').click( function(e) {
+    e.preventDefault();  
+    $.ajax({
+        type: "POST",
+        url: '../excelprint',
+        dataType: 'json',
+        data: {functionname: 'add', arguments: [1, 2]},
+
+        success: function (obj, textstatus) {
+                      if( !('error' in obj) ) {
+                          yourVariable = obj.result;
+                      }
+                      else {
+                          console.log(obj.error);
+                      }
+                }
+    });
+    return false; 
+
+});
 </script>
 
 <div data-role="content" role="main">
@@ -279,3 +300,4 @@ function queryUnconfirmedFinishedGoodEntry(isFinishedGoodEntryID) {
 <div id="reviseFinishedGoodEntryArea"></div>
 
 <div class="ui-block-b"><a href="<?php echo base_url('finishedgoodentry/downExcelFinishedGoodEntry');?>" data-role="button" data-icon="flat-bubble" data-theme="c">Excel Download FGE</a></div>
+<div class="ui-block-b down-excel"><a href="" data-role="button" data-icon="flat-bubble" data-theme="c">Excel Download FGE2</a></div>
