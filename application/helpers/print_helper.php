@@ -28,6 +28,35 @@ if ( ! function_exists('print_excel')) {
     }
 }
 
+if ( ! function_exists('only_print_excel')) {
+    function only_print_excel($db_data_test, $header) {
+        array_unshift($db_data_test, $header);
+        $spreadsheet = new Spreadsheet();
+
+        $spreadsheet->getActiveSheet()
+            ->fromArray(
+                $db_data_test,  // The data to set
+                NULL,           // Array values with this value will not be set
+                'C3'            // Top left coordinate of the worksheet range where
+                                // we want to set these values (default is A1)
+        );
+
+        $writer = new Xlsx($spreadsheet);
+        $date = date("Y.m.d");
+        $filename = 'Exceltest.'.$date.'.xlsx';
+        $writer->save("php://output");
+        $xlsData = ob_get_contents();
+        ob_end_clean();
+
+        $response =  array(
+                'op' => 'ok',
+                'file' => "data:application/vnd.ms-excel;base64,".base64_encode($xlsData)
+            );
+
+        return $response;   
+    }
+}
+
 if ( ! function_exists('download_xlsx')) {
     function download_xlsx($filename) {
         //$file = 'Exceltest.xlsx';

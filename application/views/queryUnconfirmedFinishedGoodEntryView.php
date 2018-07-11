@@ -271,14 +271,19 @@ $('.down-excel').click( function(e) {
         type: "POST",
         url: '../excelprint',
         dataType: 'json',
-        data: {functionname: 'add', arguments: [1, 2]},
+        data: {functionname: 'add', arguments: [0, 0]},
 
-        success: function (obj, textstatus) {
-                      if( !('error' in obj) ) {
-                          yourVariable = obj.result;
+        success: function (data, textstatus) {
+                      if( !('error' in data) ) {
+                        // yourVariable = data.result;
+                        var $a = $("#excel-download");
+                        $a.attr("href",data.file);
+                        $a.attr("download","file1.xlsx");
+                        $a[0].click();
+                        //$a.remove();
                       }
                       else {
-                          console.log(obj.error);
+                          console.log(data.error);
                       }
                 }
     });
@@ -302,5 +307,5 @@ $('.down-excel').click( function(e) {
 <div id="queryFinishedGoodEntryList"></div>
 <div id="reviseFinishedGoodEntryArea"></div>
 
-<div class="ui-block-b"><a href="<?php echo base_url('finishedgoodentry/downExcelFinishedGoodEntry/'.$isConfirmed.'/'.$finishedGoodEntryID.'/'.$filterByDate);?>" data-role="button" data-icon="flat-bubble" data-theme="c">Excel Download FGE</a></div>
-<div class="ui-block-b down-excel"><a href="" data-role="button" data-icon="flat-bubble" data-theme="c">Excel Download FGE2</a></div>
+<div class="ui-block-b"><a id = "excel-download" style="display:none;" href="<?php //echo base_url('finishedgoodentry/downExcelFinishedGoodEntry/'.$isConfirmed.'/'.$finishedGoodEntryID.'/'.$filterByDate);?>" data-role="button" data-icon="flat-bubble" data-theme="c">Excel Download FGE</a></div>
+<div class="ui-block-b down-excel"><a href="" data-role="button" data-icon="flat-bubble" data-theme="c">Excel Download</a></div>
