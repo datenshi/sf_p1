@@ -185,6 +185,7 @@ function revisedFinishedGoodEntry(
 function queryUnconfirmedFinishedGoodEntry(isFinishedGoodEntryID) {
     $.ajax({
         url: "/finishedgoodentry/queryFinishedGoodEntry/0/" + isFinishedGoodEntryID,
+        async: false,
         success: function(result) {
             $('#queryFinishedGoodEntryTable').remove();
             $('#reviseFinishedGoodEntryForm').remove();
@@ -198,6 +199,8 @@ function queryUnconfirmedFinishedGoodEntry(isFinishedGoodEntryID) {
             for(var i in header)
             {
                 var th = $(document.createElement('th'));
+                th.attr('class', 'sortable');
+                th.attr('style', 'cursor:pointer');
                 th.text(header[i]);
                 th.appendTo(tr);
             }
@@ -261,35 +264,103 @@ function queryUnconfirmedFinishedGoodEntry(isFinishedGoodEntryID) {
                     }
                 }
             }
+            sortable_headers_2();
         }
     });
 }
 
-$('.down-excel').click( function(e) {
-    e.preventDefault();  
-    $.ajax({
-        type: "POST",
-        url: '../excelprint',
-        dataType: 'json',
-        data: {functionname: 'add', arguments: [0, 0]},
 
-        success: function (data, textstatus) {
-                      if( !('error' in data) ) {
-                        // yourVariable = data.result;
-                        var $a = $("#excel-download");
-                        $a.attr("href",data.file);
-                        $a.attr("download","file1.xlsx");
-                        $a[0].click();
-                        //$a.remove();
-                      }
-                      else {
-                          console.log(data.error);
-                      }
-                }
+
+function sortable_headers (){
+    var table = $('table');
+
+    $('.sortable')
+        .wrapInner('<span title="sort this column"/>')
+        .each(function(){
+
+            var th = $(this),
+                thIndex = th.index(),
+                inverse = false;
+
+            th.click(function(){
+
+                table.find('td').filter(function(){
+
+                    return $(this).index() === thIndex;
+
+                }).sortElements(function(a, b){
+
+                    if( $.text([a]) == $.text([b]) )
+                        return 0;
+
+                    return $.text([a]) > $.text([b]) ?
+                        inverse ? -1 : 1
+                        : inverse ? 1 : -1;
+
+                }, function(){
+
+                    // parentNode is the element we want to move
+                    return this.parentNode; 
+
+                });
+
+                inverse = !inverse;
+
+            });
+
+        });
+}
+
+$(document).ready(function(){
+
+    
+
+    $('.down-excel').click( function(e) {
+        e.preventDefault();  
+        $.ajax({
+            type: "POST",
+            url: '../excelprint',
+            dataType: 'json',
+            data: {functionname: 'add', arguments: [0, 0]},
+
+            success: function (data, textstatus) {
+                          if( !('error' in data) ) {
+                            // yourVariable = data.result;
+                            var $a = $("#excel-download");
+                            $a.attr("href",data.file);
+                            $a.attr("download","file1.xlsx");
+                            $a[0].click();
+                            //$a.remove();
+                          }
+                          else {
+                              console.log(data.error);
+                          }
+                    }
+        });
+        return false; 
+
     });
-    return false; 
 
 });
+
+function sortable_headers_2 (){
+    $('th').click(function(){
+        var table = $(this).parents('table').eq(0)
+        var rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index()))
+        this.asc = !this.asc
+        if (!this.asc){rows = rows.reverse()}
+        for (var i = 0; i < rows.length; i++){table.append(rows[i])}
+    });
+}
+
+function comparer(index) {
+    return function(a, b) {
+        var valA = getCellValue(a, index), valB = getCellValue(b, index)
+        return $.isNumeric(valA) && $.isNumeric(valB) ? valA - valB : valA.toString().localeCompare(valB)
+    }
+}
+function getCellValue(row, index){ return $(row).children('td').eq(index).text() }
+
 </script>
 
 <div data-role="content" role="main">
@@ -300,7 +371,7 @@ $('.down-excel').click( function(e) {
 <hr size="5" noshade>
 
 <div data-role="controlgroup" data-type="horizontal">
-<button data-icon="flat-man" data-theme="f" onclick="queryUnconfirmedFinishedGoodEntry(0)">顯示入庫清單</button>
+<button id="table-button" data-icon="flat-man" data-theme="f" onclick="queryUnconfirmedFinishedGoodEntry(0)">顯示入庫清單</button>
 </div>
 
 <br><br>
