@@ -84,7 +84,7 @@ class Finishedgoodentry extends CI_Controller {
 
     public function downExcelFinishedGoodEntry($isConfirmed = 0, $finishedGoodEntryID = 0, $filterByDate = 0)
     {
-        $model = 'finishedgoodentrymodel';
+        /*$model = 'finishedgoodentrymodel';
         $query_function = 'queryFinishedGoodEntryData';
         $this->load->model($model);
 
@@ -94,7 +94,23 @@ class Finishedgoodentry extends CI_Controller {
         $header = ["成品入庫單編號", "倉儲流水號", "成品代號", "成品種類", "包裝", "單位重量", "每棧板的成品數量", "狀態", "儲放區域", "入庫日期", "棧板數", "入庫數量", "入庫重量", "待入庫棧板數", "待入庫數量", $filterByDate];
 
         $this->load->helper('print_helper');
-        print_excel($db_data_test, $header);
+        print_excel($db_data_test, $header);*/
+        $obj = $_POST['excelBuildData'];
+        $db_data_test = self::getDBInfo($obj['isConfirmed'],$obj['finishedGoodEntryID'],$obj['model'],$obj['queryfunction']);
+        $header = $obj['header'];
+        $this->load->helper('print_helper');
+        $response = only_print_excel($db_data_test, $header);
+        die(json_encode($response));
+    }
+
+    public function getDBInfo ($isConfirmed, $finishedGoodEntryID, $model, $queryFunction){
+        $model_local = $model;
+        $query_function = $queryFunction;
+
+        $this->load->model($model_local);
+
+        $query = $this->finishedgoodentrymodel->$query_function($isConfirmed, $finishedGoodEntryID);
+        return $query->result_array();
     }
 
     public function queryFinishedGoodEntry($isConfirmed, $finishedGoodEntryID)

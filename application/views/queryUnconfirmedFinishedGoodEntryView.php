@@ -284,7 +284,8 @@ $(document).ready(function(){
         e.preventDefault();  
         $.ajax({
             type: "POST",
-            url: '../excelprint',
+            //url: '../excelprint',
+            url:'downExcelFinishedGoodEntry',
             dataType: 'json',
             data: {excelBuildData:postData},
 
