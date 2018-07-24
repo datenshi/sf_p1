@@ -1,220 +1,282 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 ?>
+<style>
+    div#productInFinishedGoodRequisition-button {
+        display: none;
+    }
 
+    div#packagingInFinishedGoodRequisition-button {
+        display: none;
+    }
+
+    span.select2-selection.select2-selection--single{
+        width:150px;
+    }
+</style>
 <script>
-$(document).ready(function() {
-    var productDisplayName;
-    var packagingDisplayName;
+// Auto-fill in product ID and display product name
+function autoFillProduct() {
+    $.ajax({
+        url: "/finishedgoodinwarehouse/queryProductNameIDInWarehouse",
+        success: function(result) {
+            var row = JSON.parse(result);
 
-    function autoFillProduct() {
+            for(var i in row)
+            {
+                selectOption = $(document.createElement('option'));
+                for(var j in row[i])
+                {
+                    if ("product" == j) {
+                        productID = row[i][j];
+                        selectOption.attr('value', row[i][j]);
+                    }
+                    if ("finishedGoodType" == j) {
+                        productText = row[i][j] + "(" + productID + ")";
+                        selectOption.text(productText);
+                    }
+                }
+                selectOption.appendTo($('#productInFinishedGoodRequisition'));
+            }
+        }
+    });
+}
+autoFillProduct();
+
+// Auto-fill in packaging when product ID is selected
+$('#productInFinishedGoodRequisitionSelection').on("change", '#productInFinishedGoodRequisition', function() {
+    var productID = $('select#productInFinishedGoodRequisition').find("option:selected").val();
+
+    if ("請選擇" != productID) {
         $.ajax({
-            url: "/finishedgoodinwarehouse/queryProductInWarehouse",
+            url: "/finishedgoodpackaging/queryFinishedGoodPackagingbyProductID/" + productID,
             success: function(result) {
                 var row = JSON.parse(result);
+
+                $('select#packagingInFinishedGoodRequisition option').each( function() {
+                    $(this).remove();
+                });
+                var selectOption = $(document.createElement('option'));
+                selectOption.text("請選擇");
+                selectOption.appendTo($('#packagingInFinishedGoodRequisition'));
 
                 for(var i in row)
                 {
                     selectOption = $(document.createElement('option'));
                     for(var j in row[i])
                     {
-                        var finishedGoodID;
-                        if ("product" == j) {
-                            finishedGoodID = row[i][j];
+                        if ("finishedGoodPackagingID" == j) {
                             selectOption.attr('value', row[i][j]);
                         }
-                        if ("finishedGoodType" == j) {
-                            var productText = row[i][j] + '(' + finishedGoodID + ')';
-                            selectOption.text(productText);
+                        if ("packaging" == j) {
+                            selectOption.text(row[i][j]);
                         }
                     }
-                    selectOption.appendTo($('#productInFinishedGoodRequisition'));
+                    selectOption.appendTo($('#packagingInFinishedGoodRequisition'));
                 }
             }
         });
     }
+});
 
-    function autoFillStoredDate() {
-        // Auto-fill current date into storeDate
-        var dateObject = new Date();
-        var month = (dateObject.getMonth() + 1);
-        var date = dateObject.getDate();
+function addFinishedGoodRequisition(storedFinishedGoodID) {
+    var finishedGoodRequisitionID = $("input[name='finishedGoodRequisitionID']").val();
+    var requisitioningDepartment = $("input[name='requisitioningDepartment']").val();
+    var requisitioningMember = $("input[name='requisitioningMember']").val();
+    var requisitionedPackageNumber = $("input[name='requisitionedPackageNumber']").val();
 
-        if (2 > month.toString().length) {
-            month = '0' + month;
+    $.ajax({
+        url: "/finishedgoodrequisition/addFinishedGoodRequisition/" +storedFinishedGoodID + "/" + 
+        finishedGoodRequisitionID + "/" + 
+        requisitioningDepartment + "/" + 
+        requisitioningMember + "/" + 
+        requisitionedPackageNumber,
+        success: function(result) {
+            $('#listFinishedGoodRequisitionForm').remove();
+            var row = JSON.parse(result);
+            var header = ["領貨單編號", "成品", "包裝", "儲放區域", "領貨日期", "領貨單位", "領貨人員", "領貨數量"];
+            var table = $(document.createElement('table'));
+            table.attr('id', 'addFinishedGoodRequisitionResultTable');
+            table.appendTo($('#addFinishedGoodRequisitionResultList'));
+            var tr = $(document.createElement('tr'));
+            tr.appendTo(table);
+            for(var i in header)
+            {
+                var th = $(document.createElement('th'));
+                th.text(header[i]);
+                th.appendTo(tr);
+            }
+
+            tr = $(document.createElement('tr'));
+            tr.appendTo(table);
+            for(var j in row)
+            {
+                if ("productInWarehouseID" == j) {
+                    continue;
+                }
+                td = $(document.createElement('td'));
+                td.text(row[j]);
+                td.appendTo(tr);
+            }
+
+            $.ajax({
+                url: "/finishedgoodrequisition/increaseSerialNumber"
+            });
         }
-        if (2 > date.toString().length) {
-            date = '0' + date;
+    });
+}
+
+function listFinishedGoodRequisition(storedFinishedGoodID) {
+    $('#queryFinishedGoodInWarehouseTable').remove();
+    $('#listFinishedGoodRequisitionForm').remove();
+
+    var divForm = $(document.createElement('div'));
+    divForm.attr('id', 'listFinishedGoodRequisitionForm');
+    divForm.appendTo($('#addFinishedGoodRequisitionArea'));
+
+    var div = $(document.createElement('div'));
+    div.html("領貨單編號");
+    div.appendTo(divForm);
+
+    var input = $(document.createElement('input'));
+    input.attr({"type":"text", "name":"finishedGoodRequisitionID", "size":"20", "maxlength":"16"});
+    input.appendTo(divForm);
+
+    $.ajax({
+        url: "/finishedgoodrequisition/getSerialNumber",
+        success: function(serialNumber) {
+            $("input[name = 'finishedGoodRequisitionID']").attr({"value":"E" + serialNumber, "readonly":true});
         }
-        currentDate = dateObject.getFullYear() + "-" + month + "-" + date;
-        $("input[name = 'requisitioningDate']").attr('value', currentDate);
+    });
+
+    var div = $(document.createElement('div'));
+    div.html("領貨單位");
+    div.appendTo(divForm);
+
+    var input = $(document.createElement('input'));
+    input.attr({"type":"text", "name":"requisitioningDepartment", "size":"20", "maxlength":"16"});
+    input.appendTo(divForm);
+
+    var div = $(document.createElement('div'));
+    div.html("領貨人員");
+    div.appendTo(divForm);
+
+    var input = $(document.createElement('input'));
+    input.attr({"type":"text", "name":"requisitioningMember", "size":"20", "maxlength":"16"});
+    input.appendTo(divForm);
+
+    div = $(document.createElement('div'));
+    div.html("領貨數量");
+    div.appendTo(divForm);
+
+    var input = $(document.createElement('input'));
+    input.attr({"type":"number", "name":"requisitionedPackageNumber"});
+    input.appendTo(divForm);
+
+    div = $(document.createElement('div'));
+    div.html("");
+    div.appendTo(divForm);
+
+    var button = $(document.createElement('button'));
+    button.attr({'id':'revisionButton', 'class':'selfButtonB', 'onclick':'addFinishedGoodRequisition(' + storedFinishedGoodID + ')'});
+    button.text("新增領貨");
+    button.appendTo(divForm);
+}
+
+function queryFinishedGoodInWarehouse() {
+    var productID = $('select#productInFinishedGoodRequisition').find("option:selected").val();
+    if ("請選擇" == productID) {
+        alert("請先選擇成品");
+        event.preventDefault();
+        return;
     }
 
-    autoFillProduct();
-    autoFillStoredDate();
+    packagingID = $('select#packagingInFinishedGoodRequisition').find("option:selected").val();
+    if ("請選擇" == packagingID) {
+        queryURL = "/finishedgoodinwarehouse/queryFinishedGoodInWarehouseByProductPackagingID/" + productID + "/" + 0;
+    }
+    else {
+        queryURL = "/finishedgoodinwarehouse/queryFinishedGoodInWarehouseByProductPackagingID/" + productID + "/" + packagingID;
+    }
 
-    var productID = "";
-    // Auto-fill in packaging when product ID is selected
-    $('#productInFinishedGoodRequisitionSelection').on("change", '#productInFinishedGoodRequisition', function() {
-        productID = $('select#productInFinishedGoodRequisition').find("option:selected").val();
-        productDisplayName = $('select#productInFinishedGoodRequisition').find("option:selected").html()
+    $.ajax({
+        url: queryURL,
+        success: function(result) {
+            $('#queryFinishedGoodInWarehouseTable').remove();
+            var row = JSON.parse(result);
+            var header = ["入庫單編號", "倉儲流水號", "批號", "成品編號", "成品", "包裝", "儲放區域", "入庫數量", "入庫重量", "尚餘數量", "領貨"];
+            var table = $(document.createElement('table'));
+            table.attr('id', 'queryFinishedGoodInWarehouseTable');
+            table.appendTo($('#queryFinishedGoodInWarehouseList'));
+            var tr = $(document.createElement('tr'));
+            tr.appendTo(table);
+            for(var i in header)
+            {
+                var th = $(document.createElement('th'));
+                th.text(header[i]);
+                th.appendTo(tr);
+            }
 
-        if ("請選擇" != productID) {
-            $.ajax({
-                url: "/finishedgoodinwarehouse/queryPackagingInWarehouseByProductID/" + productID,
-                success: function(result) {
-                    var row = JSON.parse(result);
-
-                    $('select#packagingInFinishedGoodRequisition option').each( function() {
-                        $(this).remove();
-                    });
-                    var selectOption = $(document.createElement('option'));
-                    selectOption.text("請選擇");
-                    selectOption.appendTo($('#packagingInFinishedGoodRequisition'));
-
-                    var productText = "";
-                    for(var i in row)
-                    {
-                        selectOption = $(document.createElement('option'));
-                        for(var j in row[i])
-                        {
-                            if ("packagingID" == j) {
-                                selectOption.attr('value', row[i][j]);
-                                continue;
-                            }
-                            if ("packaging" == j) {
-                                productText += row[i][j] + '(';
-                                continue;
-                            }
-                            if ("unitWeight" == j) {
-                                productText += row[i][j] + '\/';
-                                continue;
-                            }
-                            if ("packageNumberOfPallet" == j) {
-                                productText += row[i][j] + ')';
-                                continue;
-                            }
-                        }
-                        selectOption.text(productText);
-                        selectOption.appendTo($('#packagingInFinishedGoodRequisition'));
-                        productText = "";
-                    }
-                }
-            });
-        }
-    });
-
-    var packagingID = "";
-    // Auto-generate finished good in warehouse with product and packaging ID
-    $('#packagingInFinishedGoodRequisitionSelection').on("change", '#packagingInFinishedGoodRequisition', function() {
-        packagingID = $('select#packagingInFinishedGoodRequisition').find("option:selected").val();
-        packagingDisplayName = $('select#packagingInFinishedGoodRequisition').find("option:selected").text();
-
-        if (("請選擇" != productID) && ("請選擇" != packagingID)) {
-            $.ajax({
-                url: "/finishedgoodinwarehouse/queryPackagNumberInWarehouseByProductPackagingID/" + productID + "\/" + packagingID,
-                success: function(result) {
-                    $('#finishedGoodInWarehouseTable').remove();
-                    var row = JSON.parse(result);
-                    var header = ["成品", "包裝", "尚存數量"];
-                    var table = $(document.createElement('table'));
-                    table.attr('id', 'finishedGoodInWarehouseTable');
-                    table.appendTo($('#finishedGoodInWarehouseList'));
-                    var tr = $(document.createElement('tr'));
-                    tr.appendTo(table);
-                    for(var i in header)
-                    {
-                        var th = $(document.createElement('th'));
-                        th.text(header[i]);
-                        th.appendTo(tr);
-                    }
-
-                    tr = $(document.createElement('tr'));
-                    tr.appendTo(table);
-                    td = $(document.createElement('td'));
-                    td.text(productDisplayName);
-                    td.appendTo(tr);
-
-                    td = $(document.createElement('td'));
-                    td.text(packagingDisplayName);
-                    td.appendTo(tr);
-
-                    td = $(document.createElement('td'));
-                    td.text(row[0]['remainingPackageNumber']);
-                    td.appendTo(tr);
-                }
-            });
-            event.preventDefault();
-        }
-    });
-
-    $('#addFinishedGoodRequisitionForm').submit(function(event) {
-        var formData = $('#addFinishedGoodRequisitionForm').serialize();
-
-        $.ajax({
-            url: "/finishedgoodrequisition/addFinishedGoodRequisition",
-            type: "POST",
-            data: formData,
-            success: function(result) {
-                $('#addFinishedGoodRequisitionTable').remove();
-                var row = JSON.parse(result);
-                var header = ["領貨單編號", "成品代號", "包裝", "領貨日期", "領貨單位", "領貨人員", "領貨數量", "尚未領取數量"];
-                var table = $(document.createElement('table'));
-                table.attr('id', 'addFinishedGoodRequisitionTable');
-                table.appendTo($('#addFinishedGoodRequisitionList'));
-                var tr = $(document.createElement('tr'));
-                tr.appendTo(table);
-                for(var i in header)
-                {
-                    var th = $(document.createElement('th'));
-                    th.text(header[i]);
-                    th.appendTo(tr);
-                }
-
+            for(var j in row)
+            {
                 tr = $(document.createElement('tr'));
                 tr.appendTo(table);
-                for(var j in row)
+                for(var k in row[j])
                 {
-                    if ("remainingPackageNumber" == j) {
-                        break;
+                    if ("storedFinishedGoodID" == k) {
+                        var storedFinishedGoodID = row[j][k];
+                        continue;
                     }
+                    if ("remainingPackageNumber" == k) {
+                        var td = $(document.createElement('td'));
+                        td.text(row[j][k]);
+                        td.appendTo(tr);
 
-                    td = $(document.createElement('td'));
-                    td.text(row[j]);
+                        var confirmedButton = $(document.createElement('button'));
+                        var onclickFunction = "listFinishedGoodRequisition(" + storedFinishedGoodID + ")";
+                        confirmedButton.attr({"class":"selfButtonG", "onclick":onclickFunction});
+                        confirmedButton.text("新增");
+
+                        td = $(document.createElement('td'));
+                        confirmedButton.appendTo(td);
+                        td.appendTo(tr);
+
+                        continue;
+                    }
+                    var td = $(document.createElement('td'));
+                    td.text(row[j][k]);
                     td.appendTo(tr);
                 }
             }
-        });
-        event.preventDefault();
+        }
+    });
+    event.preventDefault();
+}
+
+$('input[type="reset"]').click(function() {
+    // Remove options of product then create again
+    $('select#productInFinishedGoodRequisition option').each( function() {
+        if ("請選擇" != $(this).text()) {
+            $(this).remove();
+        }
+    });
+    autoFillProduct();
+
+    // Remove options of packaging
+    $('select#packagingInFinishedGoodRequisition option').each( function() {
+        if ("請選擇" != $(this).text()) {
+            $(this).remove();
+        }
     });
 
-    // When click reset button
-    $('input[type="reset"]').click(function() {
-        // Remove options of product then create again
-        $('select#productInFinishedGoodRequisition option').each( function() {
-            if ("請選擇" != $(this).text()) {
-                $(this).remove();
-            }
-        });
-        autoFillProduct();
-
-        // Remove options of packaging
-        $('select#packagingInFinishedGoodRequisition option').each( function() {
-            if ("請選擇" != $(this).text()) {
-                $(this).remove();
-            }
-        });
-
-        // Remove remaining package table
-        $('#finishedGoodInWarehouseTable').remove();
-
-        // Fill stored date again
-        autoFillStoredDate();
-
-        // Remove added material entry information table
-        $('#addFinishedGoodRequisitionTable').remove();
-    });
+    // Remove product in warehouse information table
+    $('#queryFinishedGoodInWarehouseTable').remove();
+    // Remove adding product requisition form
+    $('#listFinishedGoodRequisitionForm').remove();
+    // Remove adding product requisition result table
+    $('#addFinishedGoodRequisitionResultTable').remove();
 });
+$('.js-example-basic-single').select2();
 </script>
 
 <div data-role="content" role="main">
@@ -226,12 +288,10 @@ $(document).ready(function() {
 
 <form id="addFinishedGoodRequisitionForm">
     <div data-role="controlgroup" data-type="horizontal" data-theme="f">
-        領貨單編號
-        <input type="text" name="finishedGoodRequisitionID" size=20 maxlength=16>
-        成品
+        待領成品
     </div>
     <div data-role="controlgroup" data-type="horizontal" data-theme="f" id="productInFinishedGoodRequisitionSelection">
-        <select id="productInFinishedGoodRequisition" name="product">
+        <select id="productInFinishedGoodRequisition" class="js-example-basic-single" name="product">
         <option>請選擇</option>
         </select>
     </div>
@@ -239,24 +299,17 @@ $(document).ready(function() {
         包裝
     </div>
     <div data-role="controlgroup" data-type="horizontal" data-theme="f" id="packagingInFinishedGoodRequisitionSelection">
-        <select id="packagingInFinishedGoodRequisition" name="packagingID">
+        <select id="packagingInFinishedGoodRequisition" class="js-example-basic-single" name="packagingID">
         <option>請選擇</option>
         </select>
     </div>
-    <div id="finishedGoodInWarehouseList"></div>
     <div data-role="controlgroup" data-type="horizontal" data-theme="f">
-        領貨日期
-        <input type="date" name="requisitioningDate" min="2017-01-01">
-        領貨單位
-        <input type="text" name="requisitioningDepartment" size=20 maxlength=16>
-        領貨人員
-        <input type="text" name="requisitioningMember" size=20 maxlength=16>
-        領貨數量
-        <input type="number" name="requisitionedPackageNumber">
-        <input type="submit" value="確定" data-role="button">
-        <input type="reset" value="新增" data-role="button">
+        <button data-theme="d" onclick="queryFinishedGoodInWarehouse()">查詢</button>
+        <input type="reset" value="清除" data-role="button">
     </div>
 </form>
 
 <br><br>
-<div id="addFinishedGoodRequisitionList"></div>
+<div id="queryFinishedGoodInWarehouseList"></div>
+<div id="addFinishedGoodRequisitionArea"></div>
+<div id="addFinishedGoodRequisitionResultList"></div>

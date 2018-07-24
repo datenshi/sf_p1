@@ -1,7 +1,15 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 ?>
+<style>
+    div#purchaseOrder-button.ui-btn.ui-icon-carat-d.ui-btn-icon-right.ui-corner-all.ui-shadow.ui-first-child.ui-last-child {
+        display: none;
+    }
 
+    span.select2-selection.select2-selection--single{
+        width:150px;
+    }
+</style>
 <script>
 $(document).ready(function() {
     function autoGenerateSerialNumber() {
@@ -9,6 +17,7 @@ $(document).ready(function() {
         $.ajax({
             url: "/materialentry/getSerialNumber",
             success: function(serialNumber) {
+                $("input[name = 'materialEntryID']").attr({"value":"B" + serialNumber, "readonly":true});
                 $("input[name = 'serialNumber']").attr({"value":serialNumber, "readonly":true});
             }
         });
@@ -66,7 +75,7 @@ $(document).ready(function() {
                 success: function(result) {
                     $('#queryPurchaseOrderTable').remove();
                     var row = JSON.parse(result);
-                    var header = ["採購單編號", "原料", "供應商", "單價", "包裝", "單位重量", "進貨條件", "採購數量", "未入料數量"];
+                    var header = ["採購單編號", "原料編號", "原料", "供應商", "單價", "包裝", "單位重量", "進貨條件", "開單日期", "採購數量", "未入料數量"];
                     var table = $(document.createElement('table'));
                     table.attr('id', 'queryPurchaseOrderTable');
                     table.appendTo($('#purchaseOrderList'));
@@ -105,7 +114,7 @@ $(document).ready(function() {
             success: function(result) {
                 $('#addMaterialEntryTable').remove();
                 var row = JSON.parse(result);
-                var header = ["入料單編號", "倉儲流水號", "採購單編號", "儲放區域", "入料日期", "每棧板的原料數量", "棧板數", "入料數量", "入料重量", "入料金額"];
+                var header = ["入料單編號", "倉儲流水號", "採購單編號", "儲放區域", "入料日期", "棧板數", "入料數量", "入料重量", "入料金額"];
                 var table = $(document.createElement('table'));
                 table.attr('id', 'addMaterialEntryTable');
                 table.appendTo($('#addMaterialEntryList'));
@@ -156,13 +165,14 @@ $(document).ready(function() {
         // Remove added material entry information table
         $('#addMaterialEntryTable').remove();
     });
+    $('.js-example-basic-single').select2();
 });
 </script>
 
 <div data-role="content" role="main">
 <fieldset class="ui-grid-a">
     <div class="ui-block-a"><a href="<?php echo base_url('materialentry/addMaterialEntryView');?>" data-role="button" data-icon="flat-plus" data-theme="d">新增</a></div>
-    <div class="ui-block-b"><a href="<?php echo base_url('materialentry/queryMaterialEntryView');?>" data-role="button" data-icon="flat-bubble" data-theme="c">查詢已確認入料</a></div>
+    <div class="ui-block-b"><a href="<?php echo base_url('materialentry/queryMaterialEntryView');?>" data-role="button" data-icon="flat-bubble" data-theme="c">查詢已確認入料單</a></div>
 </fieldset>
 <hr size="5" noshade>
 
@@ -175,7 +185,7 @@ $(document).ready(function() {
         採購單編號
     </div>
     <div data-role="controlgroup" data-type="horizontal" data-theme="d" id="purchaseOrderSelection">
-        <select id="purchaseOrder" name="purchaseOrder">
+        <select class = "js-example-basic-single" id="purchaseOrder" name="purchaseOrder">
         <option>請選擇</option>
         </select>
     </div>
@@ -185,8 +195,8 @@ $(document).ready(function() {
         <input type="text" name="expectedStoredArea" size=20 maxlength=16>
         入料日期
         <input type="date" name="expectedStoredDate" min="2017-01-01">
-        每棧板的原料數量
-        <input type="number" name="packageNumberOfPallet">
+        入料數量
+        <input type="text" name="expectedStoredPackageNumber">
         棧板數
         <input type="number" name="palletNumber">
         <input type="submit" value="確定" data-role="button">

@@ -19,7 +19,7 @@ function queryMaterial() {
             $('#queryMaterialTable').remove();
             var row = JSON.parse(result);
             //var header = ["原料編號", "原料", "供應商", "包裝", "單位重量", "使用單位", "價格", "刪除"];
-            var header = ["原料編號", "原料", "供應商", "包裝", "單位重量", "使用單位", "單價", "總金額"];
+            var header = ["原料編號", "原料", "供應商", "包裝", "單位重量", "使用單位", "單價"];
             var table = $(document.createElement('table'));
             table.attr('id', 'queryMaterialTable');
             table.appendTo($('#materialList'));
@@ -28,6 +28,8 @@ function queryMaterial() {
             for(var i in header)
             {
                 var th = $(document.createElement('th'));
+		th.attr('class', 'sortable');
+                th.attr('style', 'cursor:pointer');
                 th.text(header[i]);
                 th.appendTo(tr);
             }
@@ -58,9 +60,27 @@ function queryMaterial() {
                 td.appendTo(tr);
 */
             }
+	sortable_headers();
         }
     });
 }
+function sortable_headers (){
+    $('th').click(function(){
+        var table = $(this).parents('table').eq(0)
+        var rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index()))
+        this.asc = !this.asc
+        if (!this.asc){rows = rows.reverse()}
+        for (var i = 0; i < rows.length; i++){table.append(rows[i])}
+    });
+}
+
+function comparer(index) {
+    return function(a, b) {
+        var valA = getCellValue(a, index), valB = getCellValue(b, index)
+        return $.isNumeric(valA) && $.isNumeric(valB) ? valA - valB : valA.toString().localeCompare(valB)
+    }
+}
+function getCellValue(row, index){ return $(row).children('td').eq(index).text() }
 </script>
 
 <div data-role="content" role="main">

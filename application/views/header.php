@@ -9,7 +9,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
     <link rel="stylesheet" href="<?php echo base_url('asset/css/jquery.mobile.flatui.css');?>" />
     <script src="<?php echo base_url('asset/js/jquery-2.1.4.min.js');?>"></script>
     <script src="<?php echo base_url('asset/js/jquery.mobile-1.4.5.min.js');?>"></script>
-    <script src="<?php echo base_url('asset/js/jquery.sortElements.js');?>"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
     <title>倉儲系統</title>
 
 <style>

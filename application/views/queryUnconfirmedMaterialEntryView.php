@@ -5,17 +5,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 <script>
 var materialEntryID;
 var purchaseOrder;
-var packageNumberOfPallet;
+var expectedStoredPackageNumber;
 var palletNumber;
-
-function deleteMaterialEntry(deleteURL) {
-    $.ajax({
-        url: deleteURL,
-        success: function(result) {
-            queryUnconfirmedMaterialEntry();
-        }
-    });
-}
 
 function confirmMaterialEntry(confirmURL) {
     $.ajax({
@@ -30,18 +21,18 @@ function updateMaterialEntryPackage() {
     var materialEntryID = $("input[name='materialEntryID']").val();
     var purchaseOrder = $("input[name='purchaseOrder']").val();
     var storedArea = $("input[name='expectedStoredArea']").val();
-    var packageNumberOfPallet = $("input[name='packageNumberOfPallet']").val();
+    var expectedStoredPackageNumber = $("input[name='expectedStoredPackageNumber']").val();
     var palletNumber = $("input[name='palletNumber']").val();
-    var originalPackageNumberOfPallet = $("input[name='originalPackageNumberOfPallet']").val();
+    var originalStoredPackageNumber = $("input[name='originalStoredPackageNumber']").val();
     var originalPalletNumber = $("input[name='originalPalletNumber']").val();
 
     $.ajax({
         url: "/materialentry/updateMaterialEntryPackageNumber/" +materialEntryID + "/" + 
         purchaseOrder + "/" + 
         storedArea + "/" + 
-        packageNumberOfPallet + "/" + 
+        expectedStoredPackageNumber + "/" + 
         palletNumber + "/" + 
-        originalPackageNumberOfPallet + "/" + 
+        originalStoredPackageNumber + "/" + 
         originalPalletNumber,
         success: function(result) {
             queryUnconfirmedMaterialEntry(materialEntryID);
@@ -52,7 +43,7 @@ function updateMaterialEntryPackage() {
 function revisedMaterialEntry(
         materialEntryID,
         storedArea,
-        packageNumberOfPallet,
+        expectedStoredPackageNumber,
         palletNumber,
         purchaseOrder) {
     $('#queryMaterialEntryTable').remove();
@@ -79,11 +70,11 @@ function revisedMaterialEntry(
     input.appendTo(divForm);
 
     div = $(document.createElement('div'));
-    div.html("每棧板的原料數量");
+    div.html("入料數量");
     div.appendTo(divForm);
 
     input = $(document.createElement('input'));
-    input.attr({"type":"number", "name":"packageNumberOfPallet", "value":packageNumberOfPallet});
+    input.attr({"type":"number", "name":"expectedStoredPackageNumber", "value":expectedStoredPackageNumber});
     input.appendTo(divForm);
 
     div = $(document.createElement('div'));
@@ -99,7 +90,7 @@ function revisedMaterialEntry(
     input.appendTo(divForm);
 
     input = $(document.createElement('input'));
-    input.attr({"type":"number", "name":"originalPackageNumberOfPallet", "value":packageNumberOfPallet, "hidden":true});
+    input.attr({"type":"number", "name":"originalStoredPackageNumber", "value":expectedStoredPackageNumber, "hidden":true});
     input.appendTo(divForm);
 
     input = $(document.createElement('input'));
@@ -123,7 +114,7 @@ function queryUnconfirmedMaterialEntry(isMaterialEntryID) {
             $('#queryMaterialEntryTable').remove();
             $('#reviseMaterialEntryForm').remove();
             var row = JSON.parse(result);
-            var header = ["進貨單編號", "倉儲流水號", "採購單編號", "儲放區域", "原料編號", "原料", "進貨條件", "進貨日期", "供應商", "包裝", "單位重量", "每棧板的原料數量", "棧板數", "入料數量", "入料重量", "使用單位", "單價", "入料金額", "確認", "修改"];
+            var header = ["進貨單編號", "倉儲流水號", "採購單編號", "儲放區域", "原料編號", "原料", "進貨條件", "進貨日期", "供應商", "包裝", "單位重量", "棧板數", "入料數量", "入料重量", "單價", "入料金額", "確認", "修改"];
 
             var table = $(document.createElement('table'));
             table.attr('id', 'queryMaterialEntryTable');
@@ -151,8 +142,8 @@ function queryUnconfirmedMaterialEntry(isMaterialEntryID) {
                         storedArea = row[j][k];
                     }
 
-                    if ("packageNumberOfPallet" == k) {
-                        packageNumberOfPallet = row[j][k];
+                    if ("expectedStoredPackageNumber" == k) {
+                        expectedStoredPackageNumber = row[j][k];
                     }
 
                     if ("palletNumber" == k) {
@@ -179,7 +170,7 @@ function queryUnconfirmedMaterialEntry(isMaterialEntryID) {
                         var onclickFunction = "revisedMaterialEntry(\"" 
                         + materialEntryID + "\", \"" 
                         + storedArea + "\", " 
-                        + packageNumberOfPallet + ", " 
+                        + expectedStoredPackageNumber + ", " 
                         + palletNumber + ", \"" 
                         + purchaseOrder + "\")";
                         revisedButton.attr({"class":"selfButtonB", "onclick":onclickFunction});
@@ -204,6 +195,7 @@ function queryUnconfirmedMaterialEntry(isMaterialEntryID) {
 <div data-role="content" role="main">
 <fieldset class="ui-grid-a">
     <div class="ui-block-a"><a href="<?php echo base_url('materialentry/queryUnconfirmedMaterialEntryView');?>" data-role="button" data-icon="flat-bubble" data-theme="d">原料入庫</a></div>
+    <div class="ui-block-b"><a href="<?php echo base_url('materialinwarehouse/queryMaterialInWarehouseView');?>" data-role="button" data-icon="flat-bubble" data-theme="c">查詢原料庫存</a></div>
 </fieldset>
 <hr size="5" noshade>
 

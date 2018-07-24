@@ -18,7 +18,6 @@ function querySupplier() {
         success: function(result) {
             $('#querySupplierTable').remove();
             var row = JSON.parse(result);
-            //var header = ["供應商", "產品", "包裝", "單位重量", "價格", "刪除"];
             var header = ["供應商", "原料", "單價"];
             var table = $(document.createElement('table'));
             table.attr('id', 'querySupplierTable');
@@ -29,6 +28,8 @@ function querySupplier() {
             {
                 var th = $(document.createElement('th'));
                 th.text(header[i]);
+		th.attr('class', 'sortable');
+                th.attr('style', 'cursor:pointer');
                 th.appendTo(tr);
             }
 
@@ -40,6 +41,17 @@ function querySupplier() {
                 {
                     if ("supplierID" == k) {
                         var supplierID = row[j][k];
+                        continue;
+                    }
+                    if ("material" == k) {
+                        var materialID = row[j][k];
+                        continue;
+                    }
+                    if ("materialName" == k) {
+                        var listedName = row[j][k] + "[" + materialID + "]";
+                        var td = $(document.createElement('td'));
+                        td.text(listedName);
+                        td.appendTo(tr);
                         continue;
                     }
 
@@ -59,9 +71,27 @@ function querySupplier() {
                 td.appendTo(tr);
 */
             }
+	sortable_headers ();    
         }
     });
 }
+function sortable_headers (){
+    $('th').click(function(){
+        var table = $(this).parents('table').eq(0)
+        var rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index()))
+        this.asc = !this.asc
+        if (!this.asc){rows = rows.reverse()}
+        for (var i = 0; i < rows.length; i++){table.append(rows[i])}
+    });
+}
+
+function comparer(index) {
+    return function(a, b) {
+        var valA = getCellValue(a, index), valB = getCellValue(b, index)
+        return $.isNumeric(valA) && $.isNumeric(valB) ? valA - valB : valA.toString().localeCompare(valB)
+    }
+}
+function getCellValue(row, index){ return $(row).children('td').eq(index).text() }
 </script>
 
 <div data-role="content" role="main">

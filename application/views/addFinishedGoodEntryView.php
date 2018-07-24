@@ -1,7 +1,23 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 ?>
+<style>
+    div#productInFinishedGoodEntry-button {
+        display: none;
+    }
 
+    div#packagingInFinishedGoodEntry-button {
+        display: none;
+    }
+
+    div#status-button {
+        display: none;
+    }
+
+    span.select2-selection.select2-selection--single{
+        width:150px;
+    }
+</style>
 <script>
 $(document).ready(function() {
     function autoGenerateFinishedGoodEntrySerialNumber() {
@@ -9,6 +25,7 @@ $(document).ready(function() {
         $.ajax({
             url: "/finishedgoodentry/getSerialNumber",
             success: function(serialNumber) {
+                $("input[name = 'finishedGoodEntryID']").attr({"value":"D" + serialNumber, "readonly":true});
                 $("input[name = 'serialNumber']").attr({"value":serialNumber, "readonly":true});
             }
         });
@@ -41,25 +58,8 @@ $(document).ready(function() {
         });
     }
 
-    function autoFillStoredDate() {
-        // Auto-fill current date into storeDate
-        var dateObject = new Date();
-        var month = (dateObject.getMonth() + 1);
-        var date = dateObject.getDate();
-
-        if (2 > month.toString().length) {
-            month = '0' + month;
-        }
-        if (2 > date.toString().length) {
-            date = '0' + date;
-        }
-        currentDate = dateObject.getFullYear() + "-" + month + "-" + date;
-        $("input[name = 'expectedStoredDate']").attr('value', currentDate);
-    }
-
     autoGenerateFinishedGoodEntrySerialNumber();
     autoFillProduct();
-    autoFillStoredDate();
 
     var productID = "";
     // Auto-fill in packaging when product ID is selected
@@ -79,7 +79,6 @@ $(document).ready(function() {
                     selectOption.text("請選擇");
                     selectOption.appendTo($('#packagingInFinishedGoodEntry'));
 
-                    var productText = "";
                     for(var i in row)
                     {
                         selectOption = $(document.createElement('option'));
@@ -87,24 +86,12 @@ $(document).ready(function() {
                         {
                             if ("finishedGoodPackagingID" == j) {
                                 selectOption.attr('value', row[i][j]);
-                                continue;
                             }
                             if ("packaging" == j) {
-                                productText += row[i][j] + '(';
-                                continue;
-                            }
-                            if ("unitWeight" == j) {
-                                productText += row[i][j] + '\/';
-                                continue;
-                            }
-                            if ("packageNumberOfPallet" == j) {
-                                productText += row[i][j] + ')';
-                                continue;
+                                selectOption.text(row[i][j]);
                             }
                         }
-                        selectOption.text(productText);
                         selectOption.appendTo($('#packagingInFinishedGoodEntry'));
-                        productText = "";
                     }
                 }
             });
@@ -121,7 +108,7 @@ $(document).ready(function() {
             success: function(result) {
                 $('#addFinishedGoodEntryTable').remove();
                 var row = JSON.parse(result);
-                var header = ["入庫編號", "倉儲流水號", "成品代號", "包裝", "狀態", "儲放區域", "入庫日期", "棧板", "入庫數量", "入庫重量"];
+                var header = ["入庫單編號", "倉儲流水號", "批號", "成品", "包裝", "狀態", "儲放區域", "入庫日期", "棧板數", "入庫數量", "入庫重量", "尚餘數量"];
                 var table = $(document.createElement('table'));
                 table.attr('id', 'addFinishedGoodEntryTable');
                 table.appendTo($('#finishedGoodEntryList'));
@@ -138,10 +125,6 @@ $(document).ready(function() {
                 tr.appendTo(table);
                 for(var j in row)
                 {
-                    if ("notEnteredPackageNumber" == j){
-                        break;
-                    }
-
                     td = $(document.createElement('td'));
                     td.text(row[j]);
                     td.appendTo(tr);
@@ -168,19 +151,24 @@ $(document).ready(function() {
         });
         autoFillProduct();
 
-        // Fill stored date again
-        autoFillStoredDate();
+        // Remove options of packaging
+        $('select#packagingInFinishedGoodEntry option').each( function() {
+            if ("請選擇" != $(this).text()) {
+                $(this).remove();
+            }
+        });
 
         // Remove added material entry information table
         $('#addFinishedGoodEntryTable').remove();
     });
+    $('.js-example-basic-single').select2();
 });
 </script>
 
 <div data-role="content" role="main">
 <fieldset class="ui-grid-a">
-    <div class="ui-block-a"><a href="<?php echo base_url('finishedgoodentry/addFinishedGoodEntryView');?>" data-role="button" data-icon="flat-plus" data-theme="f">新增</a></div>
-    <div class="ui-block-b"><a href="<?php echo base_url('finishedgoodentry/queryFinishedGoodEntryView');?>" data-role="button" data-icon="flat-bubble" data-theme="c">查詢</a></div>
+    <div class="ui-block-a"><a href="<?php echo base_url('finishedgoodentry/addFinishedGoodEntryView');?>" data-role="button" data-icon="flat-plus" data-theme="f">成品入庫</a></div>
+    <div class="ui-block-b"><a href="<?php echo base_url('finishedgoodinwarehouse/queryFinishedGoodInWarehouseView');?>" data-role="button" data-icon="flat-bubble" data-theme="c">查詢成品庫存</a></div>
 </fieldset>
 <hr size="5" noshade>
 
@@ -190,10 +178,12 @@ $(document).ready(function() {
         <input type="text" name="finishedGoodEntryID" size=20 maxlength=16>
         倉儲流水號
         <input type="text" name="serialNumber" size=20 maxlength=16>
+        批號
+        <input type="text" name="batchNumber" size=20 maxlength=16>
         成品
     </div>
     <div data-role="controlgroup" data-type="horizontal" data-theme="f" id="productInFinishedGoodEntrySelection">
-        <select id="productInFinishedGoodEntry" name="product">
+        <select id="productInFinishedGoodEntry" class="js-example-basic-single" name="product">
         <option>請選擇</option>
         </select>
     </div>
@@ -201,7 +191,7 @@ $(document).ready(function() {
         包裝
     </div>
     <div data-role="controlgroup" data-type="horizontal" data-theme="f" id="packagingInFinishedGoodEntrySelection">
-        <select id="packagingInFinishedGoodEntry" name="packaging">
+        <select id="packagingInFinishedGoodEntry" class="js-example-basic-single" name="packagingID">
         <option>請選擇</option>
         </select>
     </div>
@@ -209,18 +199,16 @@ $(document).ready(function() {
         狀態
     </div>
     <div data-role="controlgroup" data-type="horizontal" data-theme="f" id="statusSelection">
-        <select id="status" name="status">
+        <select id="status" class="js-example-basic-single" name="status">
         <option value="正常" selected>正常</option>
         <option value="急貨">急貨</option>
         </select>
     </div>
     <div data-role="controlgroup" data-type="horizontal" data-theme="f">
         儲放區域
-        <input type="text" name="expectedStoredArea" size=20 maxlength=16>
-        入庫日期
-        <input type="date" name="expectedStoredDate" min="2017-01-01">
+        <input type="text" name="storedArea" size=20 maxlength=16>
         成品數量
-        <input type="number" name="expectedStoredPackageNumber">
+        <input type="text" name="storedPackageNumber">
         棧板數
         <input type="number" name="palletNumber">
         <input type="submit" value="確定" data-role="button">

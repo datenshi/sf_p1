@@ -22,7 +22,7 @@ class Materialentry extends CI_Controller {
 
         $data = array(
             'theme' => 'b',
-            'title' => '新增入料'
+            'title' => '新增入料單'
         );
 
         $this->load->view('header');
@@ -42,9 +42,8 @@ class Materialentry extends CI_Controller {
         $materialEntryData['expectedStoredArea'] = $this->input->post('expectedStoredArea');
         //$materialEntryData['QRCode'] = $this->input->post('QRCode');
         $materialEntryData['expectedStoredDate'] = $this->input->post('expectedStoredDate');
-        $materialEntryData['packageNumberOfPallet'] = $this->input->post('packageNumberOfPallet');
         $materialEntryData['palletNumber'] = $this->input->post('palletNumber');
-        $materialEntryData['expectedStoredPackageNumber'] = $materialEntryData['packageNumberOfPallet'] * $materialEntryData['palletNumber'];
+        $materialEntryData['expectedStoredPackageNumber'] = $this->input->post('expectedStoredPackageNumber');;
 
         $purchaseOrderData = $this->purchaseordermodel->queryPurchaseOrderForUnitWeightUnitPrice($materialEntryData['purchaseOrder']);
         $materialEntryData['expectedStoredWeight'] = $materialEntryData['expectedStoredPackageNumber'] * $purchaseOrderData['unitWeight'];
@@ -71,13 +70,33 @@ class Materialentry extends CI_Controller {
 
         $data = array(
             'theme' => 'b',
-            'title' => "查詢已確認入料"
+            'title' => "查詢已確認入料單"
         );
 
         $this->load->view('header');
         $this->load->view('panel', $data);
         $this->load->view('queryMaterialEntryView');
         $this->load->view('footer');
+    }
+
+    public function downloadMaterialEntryExcel($isConfirmed = 0, $materialEntryID = 0, $filterByDate = 0)
+    {
+        $obj = $this->input->post('excelBuildData');
+        $db_data_test = self::getDBInfo($obj['isConfirmed'], $obj['materialEntryID'], $obj['model'], $obj['queryfunction']);
+        $header = $obj['header'];
+        $this->load->helper('print_helper');
+        $response = only_print_excel($db_data_test, $header);
+        die(json_encode($response));
+    }
+
+    public function getDBInfo($isConfirmed, $materialEntryID, $model, $queryFunction){
+        $model_local = $model;
+        $query_function = $queryFunction;
+
+        $this->load->model($model_local);
+
+        $query = $this->$model_local->$query_function($isConfirmed, $materialEntryID);
+        return $query->result_array();
     }
 
     public function queryMaterialEntry($isConfirmed, $materialEntryID)
@@ -140,23 +159,22 @@ class Materialentry extends CI_Controller {
         $materialEntryID,
         $purchaseOrder,
         $storedArea,
-        $packageNumberOfPalletString,
+        $storedPackageNumberString,
         $palletNumberString,
-        $originalPackageNumberOfPalletString,
+        $originalStoredPackageNumberString,
         $originalPalletNumberString
     )
     {
         $this->load->model('materialentrymodel');
         $this->load->model('purchaseordermodel');
 
-        $packageNumberOfPallet = intval($packageNumberOfPalletString);
+        $storedPackageNumber = intval($storedPackageNumberString);
         $palletNumber = intval($palletNumberString);
-        $originalPackageNumberOfPallet = intval($originalPackageNumberOfPalletString);
+        $originalStoredPackageNumber = intval($originalStoredPackageNumberString);
         $originalPalletNumber = intval($originalPalletNumberString);
 
         $purchaseOrderData = $this->purchaseordermodel->queryPurchaseOrderForUnitWeightUnitPrice($purchaseOrder);
 
-        $originalStoredPackageNumber = $originalPackageNumberOfPallet * $originalPalletNumber;
         $originalStoredWeight = $originalStoredPackageNumber * $purchaseOrderData['unitWeight'];
         $originalStoredMoney = $originalStoredWeight * $purchaseOrderData['unitPrice'];
 
@@ -170,14 +188,12 @@ class Materialentry extends CI_Controller {
         $result = $this->materialentrymodel->updateMaterialEntryPackageNumberData(
             $materialEntryID,
             null,
-            (-$originalPackageNumberOfPallet),
             (-$originalPalletNumber),
             (-$originalStoredPackageNumber),
             (-$originalStoredWeight),
             (-$originalStoredMoney)
         );
 
-        $storedPackageNumber = $packageNumberOfPallet * $palletNumber;
         $storedWeight = $storedPackageNumber * $purchaseOrderData['unitWeight'];
         $storedMoney = $storedWeight * $purchaseOrderData['unitPrice'];
 
@@ -191,7 +207,6 @@ class Materialentry extends CI_Controller {
         $result = $this->materialentrymodel->updateMaterialEntryPackageNumberData(
             $materialEntryID,
             $storedArea,
-            $packageNumberOfPallet,
             $palletNumber,
             $storedPackageNumber,
             $storedWeight,
@@ -233,7 +248,6 @@ class Materialentry extends CI_Controller {
     {
         $this->load->helper('file');
         $this->load->helper('date');
-        $this->load->helper('string');
 
         $dateString = '%Y%m%d';
         $time = time();
@@ -245,7 +259,19 @@ class Materialentry extends CI_Controller {
                 $newSerialNumber = $currentDate . "001";
             }
             else {
-                $newSerialNumber = increment_string($currentSerialNumber, '');
+                $number = str_replace($currentDate, '', $currentSerialNumber);
+                $number = (int)$number + 1;
+                $length = strlen($number);
+                if (3 >= $length) {
+                    for($i = 0; $i < (3 - $length); $i++)
+                    {
+                        $number = '0' . $number;
+                    }
+                }
+                else {
+                    $number = '0' . $number;
+                }
+                $newSerialNumber = $currentDate . $number;
             }
             write_file($fileName, $newSerialNumber);
         }

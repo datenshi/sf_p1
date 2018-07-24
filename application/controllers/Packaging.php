@@ -81,6 +81,14 @@ class Packaging extends CI_Controller {
         echo json_encode($query->result_array());
     }
 
+    public function queryPackagingUnitWeightbyMaterialID($materialID)
+    {
+        $this->load->model('packagingmodel');
+
+        $query = $this->packagingmodel->queryPackagingUnitWeightbyMaterialIDData($materialID);
+        echo json_encode($query->result_array());
+    }
+
     public function deletePackaging($packagingID)
     {
         $this->load->model('packagingmodel');

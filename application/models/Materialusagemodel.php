@@ -14,6 +14,7 @@ class Materialusagemodel extends CI_Model {
     {
         $this->db->select('
             materialusage.materialUsageID,
+            materialusage.material,
             material.materialName,
             materialusage.usingDepartment');
         $this->db->from('materialusage');

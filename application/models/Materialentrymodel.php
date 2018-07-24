@@ -24,11 +24,9 @@ class Materialentrymodel extends CI_Model {
             supplier.supplierName,
             packaging.packaging,
             packaging.unitWeight,
-            materialentry.packageNumberOfPallet,
             materialentry.palletNumber,
             materialentry.expectedStoredPackageNumber,
             materialentry.expectedStoredWeight,
-            materialusage.usingDepartment,
             supplier.unitPrice,
             materialentry.expectedStoredMoney,
             materialentry.confirmation');
@@ -37,12 +35,11 @@ class Materialentrymodel extends CI_Model {
         $this->db->join('material', 'purchaseorder.material = material.materialID');
         $this->db->join('supplier', 'purchaseorder.supplier = supplier.supplierID');
         $this->db->join('packaging', 'purchaseorder.packaging = packaging.packagingID');
-        $this->db->join('materialusage', 'purchaseorder.material = materialusage.material');
         if ("0" != $materialEntryID) {
             $this->db->where('materialentry.materialEntryID', $materialEntryID);
         }
         $this->db->where('materialentry.confirmation', $isConfirmed);
-        $this->db->order_by('materialentry.materialEntryID', 'ASC');
+        $this->db->order_by('materialentry.expectedStoredDate', 'ASC');
         $result = $this->db->get();
 
         return $result;
@@ -87,7 +84,6 @@ class Materialentrymodel extends CI_Model {
     public function updateMaterialEntryPackageNumberData(
         $materialEntryID,
         $storedArea,
-        $packageNumberOfPallet,
         $palletNumber,
         $storedPackageNumber,
         $storedWeight,
@@ -97,7 +93,6 @@ class Materialentrymodel extends CI_Model {
         if (null != $storedArea) {
             $this->db->set('expectedStoredArea', $storedArea);
         }
-        $this->db->set('packageNumberOfPallet', 'packageNumberOfPallet + ' . $packageNumberOfPallet, FALSE);
         $this->db->set('palletNumber', 'palletNumber + ' . $palletNumber, FALSE);
         $this->db->set('expectedStoredPackageNumber', 'expectedStoredPackageNumber + ' . $storedPackageNumber, FALSE);
         $this->db->set('expectedStoredWeight', 'expectedStoredWeight + ' . $storedWeight, FALSE);

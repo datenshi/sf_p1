@@ -22,7 +22,7 @@ class Finishedgoodentry extends CI_Controller {
 
         $data = array(
             'theme' => 'd',
-            'title' => '新增入庫單'
+            'title' => '成品入庫管理'
         );
 
         $this->load->view('header');
@@ -34,30 +34,32 @@ class Finishedgoodentry extends CI_Controller {
     public function addFinishedGoodEntry()
     {
         $this->load->model('finishedgoodpackagingmodel');
-        $this->load->model('finishedgoodentrymodel');
+        $this->load->model('finishedgoodinwarehousemodel');
 
         $finishedGoodEntryData['finishedGoodEntryID'] = $this->input->post('finishedGoodEntryID');
         $finishedGoodEntryData['serialNumber'] = $this->input->post('serialNumber');
+        $finishedGoodEntryData['batchNumber'] = $this->input->post('batchNumber');
         $finishedGoodEntryData['product'] = $this->input->post('product');
-        $finishedGoodEntryData['packaging'] = $this->input->post('packaging');
+        $finishedGoodEntryData['packagingID'] = $this->input->post('packagingID');
         $finishedGoodEntryData['status'] = $this->input->post('status');
-        $finishedGoodEntryData['expectedStoredArea'] = $this->input->post('expectedStoredArea');
-        $finishedGoodEntryData['expectedStoredDate'] = $this->input->post('expectedStoredDate');
+        $finishedGoodEntryData['storedArea'] = $this->input->post('storedArea');
+        // For Taiwan GMT+8
+        $currentDateTime = gmdate("Y-m-d H:i:s", (time() + (28800)));
+        $finishedGoodEntryData['storedDate'] = $currentDateTime;
         $finishedGoodEntryData['palletNumber'] = $this->input->post('palletNumber');
-        $finishedGoodEntryData['expectedStoredPackageNumber'] = $this->input->post('expectedStoredPackageNumber');
+        $finishedGoodEntryData['storedPackageNumber'] = $this->input->post('storedPackageNumber');
 
-        $queryData = $this->finishedgoodpackagingmodel->queryFinishedGoodPackagingbyPackagingIDData($finishedGoodEntryData['packaging']);
+        $queryData = $this->finishedgoodpackagingmodel->queryFinishedGoodPackagingbyPackagingIDData($finishedGoodEntryData['packagingID']);
         $unitWeight = $queryData['unitWeight'];
 
-        $finishedGoodEntryData['expectedStoredWeight'] = $finishedGoodEntryData['expectedStoredPackageNumber'] * $unitWeight;
-        $finishedGoodEntryData['notEnteredPalletNumber'] = $finishedGoodEntryData['palletNumber'];
-        $finishedGoodEntryData['notEnteredPackageNumber'] = $finishedGoodEntryData['expectedStoredPackageNumber'];
+        $finishedGoodEntryData['storedWeight'] = $finishedGoodEntryData['storedPackageNumber'] * $unitWeight;
+        $finishedGoodEntryData['remainingPackageNumber'] = $finishedGoodEntryData['storedPackageNumber'];
 
-        $result = $this->finishedgoodentrymodel->insertFinishedGoodEntryData($finishedGoodEntryData);
+        $result = $this->finishedgoodinwarehousemodel->insertFinishedGoodInWarehouseData($finishedGoodEntryData);
 
         // Make the data for displaying the result
         $finishedGoodEntryData['product'] = $queryData['finishedGoodType'] . '(' . $finishedGoodEntryData['product'] . ')';
-        $finishedGoodEntryData['packaging'] = $queryData['packaging'] . '(' . $unitWeight . '/' . $queryData['packageNumberOfPallet'] . ')';
+        $finishedGoodEntryData['packagingID'] = $queryData['packaging'];
         if (true == $result) {
             echo json_encode($finishedGoodEntryData);
         }
@@ -84,17 +86,6 @@ class Finishedgoodentry extends CI_Controller {
 
     public function downExcelFinishedGoodEntry($isConfirmed = 0, $finishedGoodEntryID = 0, $filterByDate = 0)
     {
-        /*$model = 'finishedgoodentrymodel';
-        $query_function = 'queryFinishedGoodEntryData';
-        $this->load->model($model);
-
-        $query = $this->finishedgoodentrymodel->$query_function($isConfirmed, $finishedGoodEntryID);
-         
-        $db_data_test = $query->result_array();
-        $header = ["成品入庫單編號", "倉儲流水號", "成品代號", "成品種類", "包裝", "單位重量", "每棧板的成品數量", "狀態", "儲放區域", "入庫日期", "棧板數", "入庫數量", "入庫重量", "待入庫棧板數", "待入庫數量", $filterByDate];
-
-        $this->load->helper('print_helper');
-        print_excel($db_data_test, $header);*/
         $obj = $_POST['excelBuildData'];
         $db_data_test = self::getDBInfo($obj['isConfirmed'],$obj['finishedGoodEntryID'],$obj['model'],$obj['queryfunction']);
         $header = $obj['header'];
@@ -209,7 +200,6 @@ class Finishedgoodentry extends CI_Controller {
     {
         $this->load->helper('file');
         $this->load->helper('date');
-        $this->load->helper('string');
 
         $dateString = '%Y%m%d';
         $time = time();
@@ -221,7 +211,19 @@ class Finishedgoodentry extends CI_Controller {
                 $newSerialNumber = $currentDate . "001";
             }
             else {
-                $newSerialNumber = increment_string($currentSerialNumber, '');
+                $number = str_replace($currentDate, '', $currentSerialNumber);
+                $number = (int)$number + 1;
+                $length = strlen($number);
+                if (3 >= $length) {
+                    for($i = 0; $i < (3 - $length); $i++)
+                    {
+                        $number = '0' . $number;
+                    }
+                }
+                else {
+                    $number = '0' . $number;
+                }
+                $newSerialNumber = $currentDate . $number;
             }
             write_file($fileName, $newSerialNumber);
         }

@@ -13,6 +13,14 @@ class Finishedgoodpackagingmodel extends CI_Model {
     public function queryFinishedGoodPackagingData()
     {
         $result = $this->db->get('finishedgoodpackaging');
+        $this->db->select('
+            finishedgood.finishedGoodType,
+            finishedgoodpackaging.product,
+            finishedgoodpackaging.packaging,
+            finishedgoodpackaging.unitWeight');
+        $this->db->from('finishedgoodpackaging');
+        $this->db->join('finishedgood', 'finishedgoodpackaging.product = finishedgood.finishedGoodID');
+        $result = $this->db->get();
 
         return $result;
     }
@@ -29,14 +37,19 @@ class Finishedgoodpackagingmodel extends CI_Model {
     {
         $this->db->select('
             finishedgoodpackaging.finishedGoodPackagingID,
-            finishedgoodpackaging.product,
-            finishedgood.finishedGoodType,
-            finishedgoodpackaging.packaging,
-            finishedgoodpackaging.unitWeight,
-            finishedgoodpackaging.packageNumberOfPallet');
+            finishedgoodpackaging.packaging');
         $this->db->from('finishedgoodpackaging');
-        $this->db->join('finishedgood', 'finishedgoodpackaging.product = finishedgood.finishedGoodID');
         $this->db->where('finishedgoodpackaging.product', $productID);
+        $result = $this->db->get();
+
+        return $result;
+    }
+
+    public function queryFinishedGoodPackagingUnitWeightbyProductIDData($productID)
+    {
+        $this->db->select('packaging, unitWeight');
+        $this->db->from('finishedgoodpackaging');
+        $this->db->where('product', $productID);
         $result = $this->db->get();
 
         return $result;
@@ -45,11 +58,9 @@ class Finishedgoodpackagingmodel extends CI_Model {
     public function queryFinishedGoodPackagingbyPackagingIDData($finishedGoodPackagingID)
     {
         $this->db->select('
-            finishedgoodpackaging.product,
             finishedgood.finishedGoodType,
             finishedgoodpackaging.packaging,
-            finishedgoodpackaging.unitWeight,
-            finishedgoodpackaging.packageNumberOfPallet');
+            finishedgoodpackaging.unitWeight');
         $this->db->from('finishedgoodpackaging');
         $this->db->join('finishedgood', 'finishedgoodpackaging.product = finishedgood.finishedGoodID');
         $this->db->where('finishedgoodpackaging.finishedGoodPackagingID', $finishedGoodPackagingID);

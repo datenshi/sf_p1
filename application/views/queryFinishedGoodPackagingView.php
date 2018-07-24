@@ -18,7 +18,7 @@ function queryFinishedGoodPackaging() {
         success: function(result) {
             $('#queryFinishedGoodPackagingTable').remove();
             var row = JSON.parse(result);
-            var header = ["成品", "包裝", "單位重量", "每棧板的成品數量"];
+            var header = ["成品", "包裝", "單位重量"];
             var table = $(document.createElement('table'));
             table.attr('id', 'queryFinishedGoodPackagingTable');
             table.appendTo($('#finishedGoodPackagingList'));
@@ -27,6 +27,8 @@ function queryFinishedGoodPackaging() {
             for(var i in header)
             {
                 var th = $(document.createElement('th'));
+		th.attr('class', 'sortable');
+                th.attr('style', 'cursor:pointer');
                 th.text(header[i]);
                 th.appendTo(tr);
             }
@@ -37,8 +39,16 @@ function queryFinishedGoodPackaging() {
                 tr.appendTo(table);
                 for(var k in row[j])
                 {
-                    if ("finishedGoodPackagingID" == k) {
-                        var finishedGoodPackagingID = row[j][k];
+                    if ("finishedGoodType" == k) {
+                        var productText = row[j][k];
+                        continue;
+                    }
+                    if ("product" == k) {
+                        productText = productText + "(" + row[j][k] + ")";
+
+                        var td = $(document.createElement('td'));
+                        td.text(productText);
+                        td.appendTo(tr);
                         continue;
                     }
 
@@ -58,9 +68,27 @@ function queryFinishedGoodPackaging() {
                 td.appendTo(tr);
 */
             }
+	sortable_headers();    
         }
     });
 }
+function sortable_headers (){
+    $('th').click(function(){
+        var table = $(this).parents('table').eq(0)
+        var rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index()))
+        this.asc = !this.asc
+        if (!this.asc){rows = rows.reverse()}
+        for (var i = 0; i < rows.length; i++){table.append(rows[i])}
+    });
+}
+
+function comparer(index) {
+    return function(a, b) {
+        var valA = getCellValue(a, index), valB = getCellValue(b, index)
+        return $.isNumeric(valA) && $.isNumeric(valB) ? valA - valB : valA.toString().localeCompare(valB)
+    }
+}
+function getCellValue(row, index){ return $(row).children('td').eq(index).text() }
 </script>
 
 <div data-role="content" role="main">

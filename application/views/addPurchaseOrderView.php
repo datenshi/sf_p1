@@ -1,31 +1,66 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 ?>
+<style>
+    div#materialInPurchaseOrder-button {
+        display: none;
+    }
 
+    div#supplierInPurchaseOrder-button {
+        display: none;
+    }
+
+    div#packagingInPurchaseOrder-button {
+        display: none;
+    }
+
+    div#purchaseCondition-button {
+        display: none;
+    }
+
+    span.select2-selection.select2-selection--single{
+        width:150px;
+    }
+</style>
 <script>
 $(document).ready(function() {
-    // Auto-fill in material ID and display material name
-    $.ajax({
-        url: "/material/queryMaterialNameWithID",
-        success: function(result) {
-            var row = JSON.parse(result);
-
-            for(var i in row)
-            {
-                selectOption = $(document.createElement('option'));
-                for(var j in row[i])
-                {
-                    if ("materialID" == j) {
-                        selectOption.attr('value', row[i][j]);
-                    }
-                    if ("materialName" == j) {
-                        selectOption.text(row[i][j]);
-                    }
-                }
-                selectOption.appendTo($('#materialInPurchaseOrder'));
+    function autoGeneratePurchaseOrderID() {
+        $.ajax({
+            url: "/purchaseorder/getSerialNumber",
+            success: function(serialNumber) {
+                $("input[name = 'purchaseOrderID']").attr({"value":"A" + serialNumber, "readonly":true});
             }
-        }
-    });
+        });
+    }
+    autoGeneratePurchaseOrderID();
+
+    function autoFillMaterial() {
+        // Auto-fill in material ID and display material name
+        $.ajax({
+            url: "/material/queryMaterialNameWithID",
+            success: function(result) {
+                var row = JSON.parse(result);
+
+                for(var i in row)
+                {
+                    selectOption = $(document.createElement('option'));
+                    for(var j in row[i])
+                    {
+                        if ("materialID" == j) {
+                            var materialID = row[i][j];
+                            selectOption.attr('value', row[i][j]);
+                        }
+                        var listedName = row[i][j] + "[" + materialID + "]";
+                        if ("materialName" == j) {
+                            selectOption.text(listedName);
+                        }
+                    }
+                    selectOption.appendTo($('#materialInPurchaseOrder'));
+                }
+            }
+        });
+    }
+    autoFillMaterial();
 
     // Auto-fill in supplier and packaging when material ID is selected
     $('#materialInPurchaseOrderSelection').on("change", '#materialInPurchaseOrder', function() {
@@ -104,10 +139,10 @@ $(document).ready(function() {
             success: function(result) {
                 $('#addPurchaseOrderTable').remove();
                 var row = JSON.parse(result);
-                var header = ["採購單編號", "原料", "供應商", "包裝", "進貨條件", "採購數量", "未入料數量"];
+                var header = ["採購單編號", "原料", "供應商", "包裝", "進貨條件", "開單日期", "採購數量", "未入料數量"];
                 var table = $(document.createElement('table'));
                 table.attr('id', 'addPurchaseOrderTable');
-                table.appendTo($('#purchaseOrderList'));
+                table.appendTo($('#addPurchaseOrderList'));
                 var tr = $(document.createElement('tr'));
                 tr.appendTo(table);
                 for(var i in header)
@@ -125,10 +160,45 @@ $(document).ready(function() {
                     td.text(row[j]);
                     td.appendTo(tr);
                 }
+
+                $.ajax({
+                    url: "/purchaseorder/increaseSerialNumber"
+                });
             }
         });
         event.preventDefault();
     });
+
+    // When click reset button
+    $('input[type="reset"]').click(function() {
+        autoGeneratePurchaseOrderID();
+
+        // Remove options of material then create again
+        $('select#materialInPurchaseOrder option').each( function() {
+            if ("請選擇" != $(this).text()) {
+                $(this).remove();
+            }
+        });
+        autoFillMaterial();
+
+        // Remove options of supplier
+        $('select#supplierInPurchaseOrder option').each( function() {
+            if ("請選擇" != $(this).text()) {
+                $(this).remove();
+            }
+        });
+
+        // Remove options of packaging
+        $('select#packagingInPurchaseOrder option').each( function() {
+            if ("請選擇" != $(this).text()) {
+                $(this).remove();
+            }
+        });
+
+        // Remove added purchase order information table
+        $('#addPurchaseOrderTable').remove();
+    });
+    $('.js-example-basic-single').select2();
 });
 </script>
 
@@ -146,7 +216,7 @@ $(document).ready(function() {
         原料
     </div>
     <div data-role="controlgroup" data-type="horizontal" data-theme="d" id="materialInPurchaseOrderSelection">
-        <select id="materialInPurchaseOrder" name="material">
+        <select id="materialInPurchaseOrder" class="js-example-basic-single" name="material">
         <option>請選擇</option>
         </select>
     </div>
@@ -154,7 +224,7 @@ $(document).ready(function() {
         供應商
     </div>
     <div data-role="controlgroup" data-type="horizontal" data-theme="d" id="supplierSelection">
-        <select id="supplierInPurchaseOrder" name="supplier">
+        <select id="supplierInPurchaseOrder" class="js-example-basic-single" name="supplier">
         <option>請選擇</option>
         </select>
     </div>
@@ -162,7 +232,7 @@ $(document).ready(function() {
         包裝
     </div>
     <div data-role="controlgroup" data-type="horizontal" data-theme="d" id="packagingSelection">
-        <select id="packagingInPurchaseOrder" name="packaging">
+        <select id="packagingInPurchaseOrder" class="js-example-basic-single" name="packaging">
         <option>請選擇</option>
         </select>
     </div>
@@ -170,7 +240,7 @@ $(document).ready(function() {
         進貨條件
     </div>
     <div data-role="controlgroup" data-type="horizontal" data-theme="d" id="purchaseConditionSelection">
-        <select id="purchaseCondition" name="purchaseCondition">
+        <select id="purchaseCondition" class="js-example-basic-single" name="purchaseCondition">
         <option value="一般" selected>一般</option>
         <option value="特採">特採</option>
         <option value="回收料">回收料</option>
@@ -178,12 +248,11 @@ $(document).ready(function() {
     </div>
     <div data-role="controlgroup" data-type="horizontal" data-theme="d">
         採購數量
-        <input type="number" name="purchasedPackageNumber">
-    </div>
-    <div data-role="controlgroup" data-type="horizontal" data-theme="d">
-        <input type="submit" value="新增" data-role="button">
+        <input type="text" name="purchasedPackageNumber">
+        <input type="submit" value="確定" data-role="button">
+        <input type="reset" value="新增" data-role="button">
     </div>
 </form>
 
 <br><br>
-<div id="purchaseOrderList"></div>
+<div id="addPurchaseOrderList"></div>

@@ -19,8 +19,7 @@ class Materialmodel extends CI_Model {
             packaging.packaging,
             packaging.unitWeight,
             materialusage.usingDepartment,
-            supplier.unitPrice,
-            material.totalMoney');
+            supplier.unitPrice');
         $this->db->from('material');
         $this->db->join('supplier', 'material.materialID = supplier.material');
         $this->db->join('packaging', 'material.materialID = packaging.material');

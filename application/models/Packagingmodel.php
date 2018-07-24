@@ -14,6 +14,7 @@ class Packagingmodel extends CI_Model {
     {
         $this->db->select('
             packaging.packagingID,
+            packaging.material,
             material.materialName,
             packaging.packaging,
             packaging.unitWeight');
@@ -52,6 +53,16 @@ class Packagingmodel extends CI_Model {
         $result = $this->db->get();
 
         return $result->row_array();
+    }
+
+    public function queryPackagingUnitWeightbyMaterialIDData($materialID)
+    {
+        $this->db->select('packaging, unitWeight');
+        $this->db->from('packaging');
+        $this->db->where('material', $materialID);
+        $result = $this->db->get();
+
+        return $result;
     }
 
     public function queryPackagingUnitWeightByPackagingID($packagingID)

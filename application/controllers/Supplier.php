@@ -80,6 +80,14 @@ class Supplier extends CI_Controller {
         echo json_encode($query->result_array());
     }
 
+    public function querysSupplierNameUnitPriceByMaterialID($materialID)
+    {
+        $this->load->model('suppliermodel');
+
+        $query = $this->suppliermodel->querysSupplierNameUnitPriceByMaterialIDData($materialID);
+        echo json_encode($query->result_array());
+    }
+
     public function deleteSupplier($supplierID)
     {
         $this->load->model('suppliermodel');

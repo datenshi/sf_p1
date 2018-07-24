@@ -13,7 +13,7 @@ class Finishedgoodinwarehouse extends CI_Controller {
 
         $data = array(
             'theme' => 'd',
-            'title' => '查詢成品庫存'
+            'title' => '成品入庫管理'
         );
 
         $this->load->view('header');
@@ -22,9 +22,24 @@ class Finishedgoodinwarehouse extends CI_Controller {
         $this->load->view('footer');
     }
 
-    public function downExcelFinishedGoodInWarehouseView()
+    public function downloadFinishedGoodInWarehouseExcel($filterByDate = 0)
     {
-        
+        $obj = $this->input->post('excelBuildData');
+        $db_data_test = self::getDBInfo($obj['model'],$obj['queryfunction']);
+        $header = $obj['header'];
+        $this->load->helper('print_helper');
+        $response = only_print_excel($db_data_test, $header);
+        die(json_encode($response));
+    }
+
+    public function getDBInfo($model, $queryFunction){
+        $model_local = $model;
+        $query_function = $queryFunction;
+
+        $this->load->model($model_local);
+
+        $query = $this->$model_local->$query_function();
+        return $query->result_array();
     }
 
     public function queryFinishedGoodInWarehouse()
@@ -35,11 +50,19 @@ class Finishedgoodinwarehouse extends CI_Controller {
         echo json_encode($query->result_array());
     }
 
-    public function queryProductInWarehouse()
+    public function queryProductNameIDInWarehouse()
     {
         $this->load->model('finishedgoodinwarehousemodel');
 
-        $query = $this->finishedgoodinwarehousemodel->queryProductInWarehouseData();
+        $query = $this->finishedgoodinwarehousemodel->queryProductNameIDInWarehouseData();
+        echo json_encode($query->result_array());
+    }
+
+    public function queryFinishedGoodInWarehouseByProductPackagingID($productID,$packagingID)
+    {
+        $this->load->model('finishedgoodinwarehousemodel');
+
+        $query = $this->finishedgoodinwarehousemodel->queryFinishedGoodInWarehouseByProductPackagingIDData($productID, $packagingID);
         echo json_encode($query->result_array());
     }
 
